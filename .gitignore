@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Angular (le build est généré dans le wwwroot du serveur)
+server/QuizParty.Server/wwwroot/
+client/node_modules/
+client/.angular/
+client/dist/
+
+# Divers
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

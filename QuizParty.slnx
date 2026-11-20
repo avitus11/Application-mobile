@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/server/">
+    <Project Path="server/QuizParty.Server/QuizParty.Server.csproj" />
+    <Project Path="server/QuizParty.Tests/QuizParty.Tests.csproj" />
+  </Folder>
+</Solution>
