@@ -5,7 +5,7 @@ namespace QuizParty.Tests;
 public class QcmContentTests
 {
     [Fact]
-    public void Parses_comments_and_applies_default_duration()
+    public void Parses_comments_and_trailing_commas()
     {
         const string json = """
             {
@@ -20,7 +20,7 @@ public class QcmContentTests
         var file = QcmContent.Parse(json);
 
         Assert.Equal("Test", file.Title);
-        Assert.Equal(QcmContent.DefaultDuration, file.Questions[0].Duration);
+        Assert.Equal(3, file.Questions[0].Answer);
     }
 
     [Fact]

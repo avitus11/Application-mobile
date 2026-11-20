@@ -27,6 +27,9 @@ public sealed class GameService(
     private int _timerDurationMs;
     private int _timerToken;
 
+    /// <summary>Durée du chrono, identique pour toutes les questions (15 s par défaut).</summary>
+    private int TimerSeconds => config.GetValue("Quiz:TimerSeconds", 15);
+
     private string ContentPath =>
         Path.GetFullPath(Path.Combine(env.ContentRootPath, config["Quiz:QcmPath"] ?? "../../content/qcm.json"));
 
@@ -67,17 +70,11 @@ public sealed class GameService(
         if (g.Phase != Phase.Question || g.CurrentQuestion is null)
             throw new GameException("Pas de question ouverte.");
 
-        var duration = TimeSpan.FromSeconds(g.CurrentQuestion.Duration);
+        var duration = TimeSpan.FromSeconds(TimerSeconds);
         var token = ++_timerToken;
         _timerDurationMs = (int)duration.TotalMilliseconds;
         _timerEndsAt = clock.GetUtcNow() + duration;
         _ = ExpireTimerAfter(duration, token);
-    });
-
-    public Task Lock() => Mutate(g =>
-    {
-        CancelTimer();
-        g.Lock();
     });
 
     public Task Reveal() => Mutate(g =>
@@ -242,9 +239,9 @@ public sealed class GameService(
             Ranking: g.ScoresVisible ? g.Ranking() : null);
     }
 
-    private static QuestionDto? QuestionOf(GameState g) =>
+    private QuestionDto? QuestionOf(GameState g) =>
         g.CurrentQuestion is { } q && g.Phase != Phase.Finished
-            ? new QuestionDto(g.QuestionIndex, g.Questions.Count, q.Text, q.Choices, q.Duration)
+            ? new QuestionDto(g.QuestionIndex, g.Questions.Count, q.Text, q.Choices, TimerSeconds)
             : null;
 
     private TimerDto? TimerOf()

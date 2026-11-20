@@ -6,8 +6,8 @@ public class GameStateTests
 {
     private static readonly QcmQuestion[] Questions =
     [
-        new("Q1", ["a", "b", "c", "d"], Answer: 2, Duration: 10),
-        new("Q2", ["a", "b", "c", "d"], Answer: 0, Duration: 10),
+        new("Q1", ["a", "b", "c", "d"], Answer: 2),
+        new("Q2", ["a", "b", "c", "d"], Answer: 0),
     ];
 
     private static GameState NewGame() => new("ABCD", Questions);

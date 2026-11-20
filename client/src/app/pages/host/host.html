@@ -129,8 +129,6 @@
             @if (!s!.timer) {
               <button class="qp-btn" (click)="startTimer()">Lancer le chrono ({{ question()?.duration }} s)</button>
             }
-            <button class="qp-btn ghost" (click)="lock()">Bloquer les réponses</button>
-            <button class="qp-btn pink" (click)="reveal()">Révéler la réponse</button>
           }
           @case ('Locked') {
             <button class="qp-btn pink" (click)="reveal()">Révéler la réponse</button>

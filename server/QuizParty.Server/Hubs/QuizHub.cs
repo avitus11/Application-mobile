@@ -21,7 +21,6 @@ public sealed class QuizHub(GameService game, IConfiguration config) : Hub
     public Task CreateGame() => Host(game.CreateGame);
     public Task NextQuestion() => Host(game.NextQuestion);
     public Task StartTimer() => Host(game.StartTimer);
-    public Task LockAnswers() => Host(game.Lock);
     public Task RevealAnswer() => Host(game.Reveal);
     public Task SetScoresVisible(bool visible) => Host(() => game.SetScoresVisible(visible));
     public Task RemovePlayer(string playerId) => Host(() => game.RemovePlayer(playerId));

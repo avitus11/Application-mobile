@@ -63,10 +63,6 @@ export class Host implements OnInit {
     void this.hub.call('StartTimer');
   }
 
-  protected lock(): void {
-    void this.hub.call('LockAnswers');
-  }
-
   protected reveal(): void {
     void this.hub.call('RevealAnswer');
   }
