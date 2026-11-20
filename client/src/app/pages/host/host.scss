@@ -1,0 +1,357 @@
+// Écran animateur : pensé pour une TV ou un vidéoprojecteur (1920×1080), lisible de loin.
+
+.screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem 7.5rem;
+  gap: 1.5rem;
+}
+
+.status {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  translate: -50% 0;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: var(--qp-red);
+  font-weight: 800;
+  z-index: 20;
+}
+
+.center {
+  flex: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 2rem;
+  text-align: center;
+}
+
+.qp-btn.big {
+  font-size: 1.6rem;
+  padding: 1.1rem 2.5rem;
+}
+
+.muted {
+  margin: 0;
+  color: var(--qp-muted);
+  font-size: 1.3rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+
+  .brand {
+    font-weight: 900;
+    color: var(--qp-yellow);
+  }
+
+  .code strong {
+    letter-spacing: 0.15em;
+    color: var(--qp-pink);
+  }
+
+  .progress {
+    margin-left: auto;
+  }
+}
+
+// ---------- Salon ----------
+
+.lobby {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(320px, 520px) 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.join {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
+
+  .qr {
+    width: min(100%, 360px);
+    border-radius: 1rem;
+    background: white;
+    animation: qp-pop 0.4s ease-out;
+  }
+
+  .url {
+    margin: 0;
+    font-size: 1.2rem;
+    word-break: break-all;
+  }
+
+  .bigcode {
+    margin: 0;
+    font-size: 4.5rem;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    color: var(--qp-yellow);
+  }
+}
+
+.players-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.6rem 0.6rem 1.2rem;
+  border-radius: 999px;
+  background: var(--qp-violet);
+  font-size: 1.5rem;
+  font-weight: 900;
+  animation: qp-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &.off {
+    opacity: 0.45;
+  }
+
+  .remove {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 0.25);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.5;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.waiting {
+  font-size: 1.5rem;
+  color: var(--qp-muted);
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// ---------- Question ----------
+
+.question {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.qtext {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.15;
+  text-align: center;
+  padding: 1.5rem 2rem;
+  border-radius: var(--qp-radius);
+  background: var(--qp-white);
+  color: var(--qp-ink);
+  box-shadow: 0 8px 0 rgb(0 0 0 / 0.3);
+  animation: qp-pop 0.4s ease-out;
+}
+
+.timer-row {
+  min-height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  app-countdown {
+    width: min(100%, 900px);
+  }
+
+  .locked {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--qp-yellow);
+  }
+}
+
+.choices {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  min-height: 7rem;
+  border-radius: var(--qp-radius);
+  background: var(--choice);
+  color: var(--choice-ink, var(--qp-white));
+  box-shadow: 0 7px 0 rgb(0 0 0 / 0.3);
+  font-size: clamp(1.5rem, 2.6vw, 2.4rem);
+  font-weight: 900;
+  transition: opacity 0.3s, transform 0.3s, filter 0.3s;
+  animation: qp-pop 0.4s ease-out both;
+
+  @for $i from 0 through 3 {
+    &.choice-#{$i} {
+      animation-delay: #{0.1 + $i * 0.08}s;
+    }
+  }
+
+  .letter {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.8rem;
+    background: rgb(0 0 0 / 0.2);
+  }
+
+  .label {
+    flex: 1;
+  }
+
+  .count {
+    font-size: 2.2rem;
+    padding: 0.2rem 1rem;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 0.25);
+  }
+
+  &.correct {
+    transform: scale(1.03);
+    outline: 6px solid var(--qp-white);
+    animation: winner 0.6s ease-out;
+  }
+
+  &.wrong {
+    opacity: 0.3;
+    filter: grayscale(0.6);
+  }
+}
+
+@keyframes winner {
+  40% {
+    transform: scale(1.08) rotate(-1deg);
+  }
+}
+
+.answered {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+
+  li {
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.1);
+    font-weight: 800;
+    color: var(--qp-muted);
+    transition: background 0.2s;
+
+    &.done {
+      background: var(--qp-green);
+      color: var(--qp-ink);
+    }
+
+    &.off {
+      opacity: 0.4;
+    }
+  }
+}
+
+// ---------- Classement ----------
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: rgb(10 2 30 / 0.75);
+  animation: fade 0.3s ease-out;
+}
+
+.overlay-card {
+  width: min(720px, 100%);
+  max-height: 80dvh;
+  overflow: auto;
+  display: grid;
+  gap: 1.5rem;
+  background: var(--qp-bg-1);
+
+  .small {
+    font-size: 3rem;
+    text-align: center;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+// ---------- Commandes ----------
+
+.controls {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 15;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background: rgb(10 2 30 / 0.85);
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.main-actions,
+.side-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.toast {
+  position: fixed;
+  right: 2rem;
+  bottom: 6.5rem;
+  z-index: 30;
+  max-width: 480px;
+  background: #3a0d24;
+}

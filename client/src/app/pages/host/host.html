@@ -1,0 +1,159 @@
+@let s = state();
+
+<div class="screen">
+  @if (hub.status() !== 'connected') {
+    <div class="status">Connexion au serveur…</div>
+  }
+
+  <!-- Pas encore de partie -->
+  @if (!s?.hasGame) {
+    <section class="center">
+      <h1 class="qp-logo">Quiz Party</h1>
+      @if (s?.contentError; as err) {
+        <div class="qp-error">
+          <strong>Le fichier de questions a un problème :</strong>
+          {{ '\n' + err }}
+        </div>
+      }
+      <button class="qp-btn pink big" (click)="createGame()" [disabled]="hub.status() !== 'connected'">
+        Créer la partie
+      </button>
+    </section>
+  } @else {
+    <header class="topbar">
+      <span class="brand">Quiz Party</span>
+      <span class="code">Code <strong>{{ s!.code }}</strong></span>
+      @if (question(); as q) {
+        <span class="progress">Question {{ q.index + 1 }} / {{ q.count }}</span>
+      }
+    </header>
+
+    @switch (phase()) {
+      <!-- Salon : on attend les joueurs -->
+      @case ('Lobby') {
+        <section class="lobby">
+          <div class="join qp-card">
+            <h2>Rejoins la partie !</h2>
+            @if (qrDataUrl(); as qr) {
+              <img class="qr" [src]="qr" alt="QR code pour rejoindre" />
+            }
+            <p class="url">{{ s!.joinUrl }}</p>
+            <p class="bigcode">{{ s!.code }}</p>
+          </div>
+          <div class="players-panel">
+            <h2>Joueurs ({{ players().length }})</h2>
+            <ul class="chips">
+              @for (p of players(); track p.id) {
+                <li class="chip" [class.off]="!p.connected">
+                  {{ p.pseudo }}
+                  <button class="remove" (click)="removePlayer(p.id)" title="Retirer">×</button>
+                </li>
+              } @empty {
+                <li class="waiting">En attente des joueurs…</li>
+              }
+            </ul>
+            @if (s!.contentTitle) {
+              <p class="muted">{{ s!.contentTitle }}</p>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Question en cours, bloquée ou révélée -->
+      @case ('Finished') {
+        <section class="center">
+          <h1 class="qp-logo">Fin du QCM !</h1>
+          <p class="muted">Révèle les scores pour découvrir le classement.</p>
+        </section>
+      }
+
+      @default {
+        @if (question(); as q) {
+          <section class="question" [class.revealed]="phase() === 'Reveal'">
+            <h1 class="qtext">{{ q.text }}</h1>
+
+            <div class="timer-row">
+              @if (s!.timer) {
+                <app-countdown [timer]="s!.timer" size="big" />
+              } @else if (phase() === 'Locked') {
+                <p class="locked">Réponses bloquées</p>
+              } @else if (phase() === 'Question') {
+                <p class="muted">{{ s!.answersCount }} / {{ connectedCount() }} réponses</p>
+              }
+            </div>
+
+            <div class="choices">
+              @for (c of q.choices; track $index) {
+                <div
+                  class="choice choice-{{ $index }}"
+                  [class.correct]="s!.correctAnswer === $index"
+                  [class.wrong]="s!.correctAnswer !== null && s!.correctAnswer !== $index"
+                >
+                  <span class="letter">{{ letters[$index] }}</span>
+                  <span class="label">{{ c }}</span>
+                  @if (s!.distribution; as d) {
+                    <span class="count">{{ d[$index] }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <ul class="answered">
+              @for (p of players(); track p.id) {
+                <li [class.done]="p.hasAnswered" [class.off]="!p.connected">{{ p.pseudo }}</li>
+              }
+            </ul>
+          </section>
+        }
+      }
+    }
+
+    <!-- Classement, visible seulement quand l'animateur le décide -->
+    @if (s!.scoresVisible && s!.ranking; as ranking) {
+      <div class="overlay" (click)="toggleScores()">
+        <div class="overlay-card qp-card" (click)="$event.stopPropagation()">
+          <h1 class="qp-logo small">Classement</h1>
+          <app-leaderboard [ranking]="ranking" />
+        </div>
+      </div>
+    }
+
+    <!-- Barre de commandes de l'animateur -->
+    <footer class="controls">
+      <div class="main-actions">
+        @switch (phase()) {
+          @case ('Lobby') {
+            <button class="qp-btn green" (click)="next()" [disabled]="players().length === 0">Lancer le QCM</button>
+          }
+          @case ('Question') {
+            @if (!s!.timer) {
+              <button class="qp-btn" (click)="startTimer()">Lancer le chrono ({{ question()?.duration }} s)</button>
+            }
+            <button class="qp-btn ghost" (click)="lock()">Bloquer les réponses</button>
+            <button class="qp-btn pink" (click)="reveal()">Révéler la réponse</button>
+          }
+          @case ('Locked') {
+            <button class="qp-btn pink" (click)="reveal()">Révéler la réponse</button>
+          }
+          @case ('Reveal') {
+            <button class="qp-btn green" (click)="next()">
+              {{ s!.hasNextQuestion ? 'Question suivante' : 'Terminer le QCM' }}
+            </button>
+          }
+        }
+      </div>
+      <div class="side-actions">
+        <button class="qp-btn blue" (click)="toggleScores()">
+          {{ s!.scoresVisible ? 'Masquer les scores' : 'Afficher les scores' }}
+        </button>
+        <button class="qp-btn" [class.ghost]="!confirmNewGame()" [class.danger]="confirmNewGame()" (click)="askNewGame()">
+          {{ confirmNewGame() ? 'Confirmer ?' : 'Nouvelle partie' }}
+        </button>
+      </div>
+    </footer>
+  }
+
+  @if (hub.lastError(); as err) {
+    <div class="toast qp-error">{{ err }}</div>
+  }
+</div>

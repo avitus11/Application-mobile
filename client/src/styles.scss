@@ -1,0 +1,138 @@
+// Ambiance Quiz Party : fond violet profond, couleurs vives, gros caractères lisibles sur la TV.
+// Aucune police externe : l'appli doit marcher sans internet.
+
+:root {
+  --qp-bg-1: #2a0b5e;
+  --qp-bg-2: #12042e;
+  --qp-ink: #1b0b33;
+  --qp-white: #fff;
+  --qp-muted: rgb(255 255 255 / 0.7);
+  --qp-red: #ff3d68;
+  --qp-blue: #2f9bff;
+  --qp-yellow: #ffc93c;
+  --qp-green: #2ee59d;
+  --qp-pink: #ff5fd2;
+  --qp-violet: #8b5cff;
+  --qp-radius: 1.25rem;
+  --qp-font: 'Segoe UI Black', 'Arial Rounded MT Bold', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--qp-font);
+  color: var(--qp-white);
+  background:
+    radial-gradient(circle at 15% 20%, rgb(255 95 210 / 0.25), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgb(47 155 255 / 0.25), transparent 45%),
+    linear-gradient(160deg, var(--qp-bg-1), var(--qp-bg-2));
+  background-attachment: fixed;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.qp-logo {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(90deg, var(--qp-yellow), var(--qp-pink), var(--qp-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 0 rgb(0 0 0 / 0.35));
+}
+
+.qp-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.6rem;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--qp-ink);
+  background: var(--qp-yellow);
+  box-shadow: 0 5px 0 rgb(0 0 0 / 0.35);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s, opacity 0.2s;
+
+  &:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.pink { background: var(--qp-pink); }
+  &.green { background: var(--qp-green); }
+  &.blue { background: var(--qp-blue); color: var(--qp-white); }
+  &.ghost {
+    background: rgb(255 255 255 / 0.12);
+    color: var(--qp-white);
+    box-shadow: none;
+  }
+  &.danger { background: var(--qp-red); color: var(--qp-white); }
+}
+
+.qp-card {
+  background: rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: var(--qp-radius);
+  padding: 1.25rem;
+  backdrop-filter: blur(6px);
+}
+
+.qp-input {
+  width: 100%;
+  border: 3px solid transparent;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  font: inherit;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--qp-ink);
+  background: var(--qp-white);
+  outline: none;
+
+  &:focus {
+    border-color: var(--qp-pink);
+  }
+}
+
+.qp-error {
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: rgb(255 61 104 / 0.2);
+  border: 2px solid var(--qp-red);
+  font-weight: 700;
+  white-space: pre-line;
+}
+
+// Les 4 couleurs de réponse A, B, C, D
+.choice-0 { --choice: var(--qp-red); }
+.choice-1 { --choice: var(--qp-blue); }
+.choice-2 { --choice: var(--qp-yellow); --choice-ink: var(--qp-ink); }
+.choice-3 { --choice: var(--qp-green); --choice-ink: var(--qp-ink); }
+
+@keyframes qp-pop {
+  from { opacity: 0; transform: scale(0.85); }
+}

@@ -1,0 +1,231 @@
+// Écran joueur : pensé pour un téléphone tenu en main, gros boutons.
+
+.screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.status {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  background: var(--qp-red);
+  font-weight: 800;
+}
+
+.join {
+  flex: 1;
+  display: grid;
+  align-content: center;
+  gap: 1.25rem;
+
+  .qp-logo {
+    text-align: center;
+    font-size: 3.2rem;
+  }
+
+  label {
+    display: grid;
+    gap: 0.4rem;
+    font-weight: 800;
+  }
+
+  .code {
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    text-align: center;
+    font-size: 2rem;
+  }
+
+  .qp-btn {
+    font-size: 1.4rem;
+    padding: 1rem;
+  }
+
+  .qp-error {
+    margin: 0;
+  }
+}
+
+.me {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 900;
+
+  .pseudo {
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    background: var(--qp-violet);
+  }
+}
+
+.message {
+  flex: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  text-align: center;
+
+  .emoji {
+    font-size: 4rem;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  p {
+    margin: 0;
+    color: var(--qp-muted);
+    font-size: 1.1rem;
+  }
+}
+
+@keyframes bounce {
+  50% {
+    transform: translateY(-0.6rem);
+  }
+}
+
+.question {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.qtext {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.choices {
+  flex: 1;
+  display: grid;
+  grid-template-rows: repeat(4, minmax(4.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.choice {
+  appearance: none;
+  border: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--qp-radius);
+  background: var(--choice);
+  color: var(--choice-ink, var(--qp-white));
+  box-shadow: 0 6px 0 rgb(0 0 0 / 0.3);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s, box-shadow 0.1s;
+
+  &:active:not(:disabled) {
+    transform: translateY(5px);
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.3);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  .letter {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.7rem;
+    background: rgb(0 0 0 / 0.2);
+  }
+
+  &.selected {
+    outline: 5px solid var(--qp-white);
+    transform: scale(1.02);
+  }
+
+  &.dim {
+    opacity: 0.35;
+  }
+
+  .label {
+    flex: 1;
+  }
+
+  .mark {
+    font-size: 1.8rem;
+  }
+
+  &.correct {
+    opacity: 1;
+    outline: 5px solid var(--qp-white);
+  }
+
+  &.wrong-pick {
+    opacity: 0.6;
+    outline: 4px dashed var(--qp-white);
+    transform: none;
+  }
+}
+
+.closed .choice:not(.selected):not(.correct):not(.wrong-pick) {
+  opacity: 0.3;
+}
+
+.hint {
+  margin: 0;
+  text-align: center;
+  color: var(--qp-muted);
+  font-weight: 700;
+}
+
+.result {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 1rem;
+  border-radius: var(--qp-radius);
+  animation: qp-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  strong {
+    font-size: 2rem;
+  }
+
+  &.correct {
+    background: var(--qp-green);
+    color: var(--qp-ink);
+  }
+
+  &.wrong,
+  &.none {
+    background: var(--qp-red);
+  }
+}
+
+.scores {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.toast {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  margin: 0;
+  background: #3a0d24;
+}

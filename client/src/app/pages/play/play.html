@@ -1,0 +1,120 @@
+@let s = state();
+
+<div class="screen">
+  @if (hub.status() === 'reconnecting' || hub.status() === 'disconnected') {
+    <div class="status">Reconnexion…</div>
+  }
+
+  @if (!joined()) {
+    <!-- Rejoindre : code du salon + pseudo, rien d'autre -->
+    <form class="join" (ngSubmit)="join()">
+      <h1 class="qp-logo">Quiz Party</h1>
+      <label>
+        Code du salon
+        <input
+          class="qp-input code"
+          name="code"
+          [(ngModel)]="code"
+          maxlength="4"
+          autocomplete="off"
+          autocapitalize="characters"
+          placeholder="ABCD"
+          required
+        />
+      </label>
+      <label>
+        Ton pseudo
+        <input class="qp-input" name="pseudo" [(ngModel)]="pseudo" maxlength="16" autocomplete="off" placeholder="Pseudo" required />
+      </label>
+      @if (joinError(); as err) {
+        <p class="qp-error">{{ err }}</p>
+      }
+      <button class="qp-btn pink" type="submit" [disabled]="joining() || !code.trim() || !pseudo.trim()">
+        {{ joining() ? 'Connexion…' : 'C’est parti !' }}
+      </button>
+    </form>
+  } @else {
+    <header class="me">
+      <span class="pseudo">{{ s!.pseudo }}</span>
+      @if (s!.question; as q) {
+        <span class="progress">{{ q.index + 1 }} / {{ q.count }}</span>
+      }
+    </header>
+
+    @switch (phase()) {
+      @case ('Lobby') {
+        <section class="message">
+          <div class="emoji">🎉</div>
+          <h2>Tu es dans la partie !</h2>
+          <p>Regarde l’écran, ça va bientôt commencer…</p>
+        </section>
+      }
+
+      @case ('Finished') {
+        <section class="message">
+          <div class="emoji">🏁</div>
+          <h2>Fin du QCM !</h2>
+          <p>Le classement va être révélé…</p>
+        </section>
+      }
+
+      @default {
+        @if (s!.question; as q) {
+          <section class="question" [class.closed]="phase() !== 'Question'">
+            <p class="qtext">{{ q.text }}</p>
+            <app-countdown [timer]="s!.timer" />
+
+            @if (result(); as r) {
+              <div class="result {{ r }}">
+                @switch (r) {
+                  @case ('correct') { <strong>Bonne réponse !</strong><span>+1 point</span> }
+                  @case ('wrong') { <strong>Raté…</strong><span>C’était {{ letters[s!.correctAnswer!] }}</span> }
+                  @case ('none') { <strong>Pas de réponse</strong><span>C’était {{ letters[s!.correctAnswer!] }}</span> }
+                }
+              </div>
+            } @else if (phase() === 'Locked') {
+              <p class="hint">Réponses bloquées</p>
+            }
+
+            <div class="choices">
+              @for (c of q.choices; track $index) {
+                <button
+                  type="button"
+                  class="choice choice-{{ $index }}"
+                  [class.selected]="s!.myAnswer === $index"
+                  [class.dim]="s!.myAnswer !== null && s!.myAnswer !== $index"
+                  [class.correct]="s!.correctAnswer === $index"
+                  [class.wrong-pick]="s!.correctAnswer !== null && s!.correctAnswer !== $index && s!.myAnswer === $index"
+                  [disabled]="phase() !== 'Question'"
+                  (click)="choose($index)"
+                >
+                  <span class="letter">{{ letters[$index] }}</span>
+                  <span class="label">{{ c }}</span>
+                  @if (s!.correctAnswer === $index) {
+                    <span class="mark">✓</span>
+                  } @else if (s!.correctAnswer !== null && s!.myAnswer === $index) {
+                    <span class="mark">✗</span>
+                  }
+                </button>
+              }
+            </div>
+            @if (phase() === 'Question' && s!.myAnswer !== null) {
+              <p class="hint">Réponse enregistrée — tu peux encore changer.</p>
+            }
+          </section>
+        }
+      }
+    }
+
+    @if (s!.scoresVisible && s!.ranking; as ranking) {
+      <section class="scores qp-card">
+        <h2>Classement</h2>
+        <app-leaderboard [ranking]="ranking" [highlightId]="s!.playerId" [compact]="true" />
+      </section>
+    }
+  }
+
+  @if (hub.lastError(); as err) {
+    <p class="qp-error toast">{{ err }}</p>
+  }
+</div>
