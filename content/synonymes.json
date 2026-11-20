@@ -1,0 +1,21 @@
+{
+  // Mots de l'épreuve des Synonymes. Chaque mot ne sort qu'une fois par partie (ordre tiré au hasard).
+  // Compte large : 15 tours de 45 s peuvent consommer plus de 100 mots.
+  "words": [
+    "maison", "voiture", "content", "rapide", "parler", "manger", "regarder", "beau", "triste", "peur",
+    "argent", "travail", "ami", "chemin", "colère", "fatigué", "courir", "dormir", "énorme", "minuscule",
+    "drôle", "bizarre", "intelligent", "bête", "riche", "pauvre", "vieux", "nouveau", "propre", "sale",
+    "commencer", "finir", "chercher", "trouver", "donner", "prendre", "aimer", "détester", "crier", "chuchoter",
+    "bateau", "livre", "film", "chanson", "fête", "repas", "boisson", "vêtement", "chaussure", "chapeau",
+    "médecin", "policier", "professeur", "enfant", "patron", "voleur", "menteur", "héros", "roi", "soldat",
+    "forêt", "montagne", "rivière", "mer", "ciel", "pluie", "vent", "soleil", "nuit", "matin",
+    "erreur", "problème", "solution", "idée", "secret", "mensonge", "vérité", "chance", "danger", "victoire",
+    "courage", "honte", "joie", "tristesse", "surprise", "ennui", "calme", "bruit", "silence", "désordre",
+    "frapper", "casser", "réparer", "construire", "détruire", "voler", "cacher", "montrer", "expliquer", "comprendre",
+    "partir", "arriver", "revenir", "tomber", "sauter", "nager", "danser", "chanter", "rire", "pleurer",
+    "ordinateur", "téléphone", "lettre", "cadeau", "jouet", "outil", "arme", "clé", "porte", "fenêtre",
+    "chef", "groupe", "foule", "famille", "voisin", "ennemi", "copain", "bébé", "vieillard", "inconnu",
+    "magnifique", "horrible", "étrange", "célèbre", "timide", "bavard", "paresseux", "courageux", "gentil", "méchant",
+    "vite", "lentement", "souvent", "jamais", "beaucoup", "peu", "toujours", "bientôt", "ensemble", "partout"
+  ]
+}

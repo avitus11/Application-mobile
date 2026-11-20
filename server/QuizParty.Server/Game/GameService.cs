@@ -30,8 +30,14 @@ public sealed class GameService(
     /// <summary>Durée du chrono, identique pour toutes les questions (15 s par défaut).</summary>
     private int TimerSeconds => config.GetValue("Quiz:TimerSeconds", 15);
 
+    /// <summary>Durée d'un tour de Synonymes (45 s par défaut).</summary>
+    private int SynonymsSeconds => config.GetValue("Quiz:SynonymsSeconds", 45);
+
     private string ContentPath =>
         Path.GetFullPath(Path.Combine(env.ContentRootPath, config["Quiz:QcmPath"] ?? "../../content/qcm.json"));
+
+    private string SynonymsPath =>
+        Path.GetFullPath(Path.Combine(env.ContentRootPath, config["Quiz:SynonymsPath"] ?? "../../content/synonymes.json"));
 
     // ---------- Hôte ----------
 
@@ -42,10 +48,12 @@ public sealed class GameService(
             try
             {
                 var content = QcmContent.Load(ContentPath);
-                _game = new GameState(NewCode(), content.Questions);
+                var words = SynonymsContent.Load(SynonymsPath);
+                _game = new GameState(NewCode(), content.Questions, words);
                 _contentTitle = content.Title;
                 _contentError = null;
-                logger.LogInformation("Nouvelle partie {Code} : {Count} questions", _game.Code, content.Questions.Count);
+                logger.LogInformation("Nouvelle partie {Code} : {Count} questions, {Words} mots",
+                    _game.Code, content.Questions.Count, words.Count);
             }
             catch (QcmContentException ex)
             {
@@ -69,13 +77,56 @@ public sealed class GameService(
     {
         if (g.Phase != Phase.Question || g.CurrentQuestion is null)
             throw new GameException("Pas de question ouverte.");
+        StartTimerFor(TimerSeconds);
+    });
 
-        var duration = TimeSpan.FromSeconds(TimerSeconds);
+    // ---------- Duos et Synonymes ----------
+
+    public Task FormTeams() => Mutate(g => g.FormTeams());
+
+    public Task StartSynonyms() => Mutate(g => g.StartSynonyms());
+
+    public Task SelectTurn(int teamNumber) => Mutate(g => g.SelectTurn(teamNumber));
+
+    public Task BackToTeams() => Mutate(g => g.BackToTeams());
+
+    public Task StartTurn() => Mutate(g =>
+    {
+        g.StartTurn();
+        StartTimerFor(SynonymsSeconds);
+    });
+
+    public Task WordFound(int wordSeq) => Mutate(g => AfterWord(g, () => g.WordFound(wordSeq)));
+
+    public Task WordPassed(int wordSeq) => Mutate(g => AfterWord(g, () => g.WordPassed(wordSeq)));
+
+    /// <summary>Trouvé / Passer depuis le téléphone : seul le joueur qui fait deviner peut le faire.</summary>
+    public Task PlayerWord(string connectionId, int wordSeq, bool found) => Mutate(g =>
+    {
+        if (!_playerByConnection.TryGetValue(connectionId, out var playerId) || g.Turn?.GiverId != playerId)
+            throw new GameException("Ce n'est pas toi qui fais deviner.");
+        AfterWord(g, () =>
+        {
+            if (found) g.WordFound(wordSeq);
+            else g.WordPassed(wordSeq);
+        });
+    });
+
+    private void AfterWord(GameState g, Action action)
+    {
+        action();
+        // Plus de mots : le tour s'est terminé tout seul, on coupe le chrono.
+        if (g.Phase != Phase.SynonymsRunning) CancelTimer();
+    }
+
+    private void StartTimerFor(int seconds)
+    {
+        var duration = TimeSpan.FromSeconds(seconds);
         var token = ++_timerToken;
         _timerDurationMs = (int)duration.TotalMilliseconds;
         _timerEndsAt = clock.GetUtcNow() + duration;
         _ = ExpireTimerAfter(duration, token);
-    });
+    }
 
     public Task Reveal() => Mutate(g =>
     {
@@ -194,7 +245,7 @@ public sealed class GameService(
         if (g is null)
         {
             return new HostStateDto(false, null, null, null, _contentError, nameof(Phase.Lobby), [], null, null, null, 0,
-                null, false, false, null);
+                null, false, false, null, [], null, null, 0, false);
         }
 
         var revealed = g.Phase == Phase.Reveal;
@@ -214,15 +265,41 @@ public sealed class GameService(
             HasNextQuestion: g.HasNextQuestion,
             ScoresVisible: g.ScoresVisible,
             // Le classement n'est envoyé que s'il est révélé : rien à espionner côté navigateur.
-            Ranking: g.ScoresVisible ? g.Ranking() : null);
+            Ranking: g.ScoresVisible ? g.Ranking() : null,
+            Teams: g.Teams.Select(t => TeamOf(g, t)).ToList(),
+            Turn: TurnOf(g),
+            // Le mot part vers l'écran animateur pour qu'il puisse vérifier en cas de doute (il reste masqué à l'écran).
+            Word: g.Phase == Phase.SynonymsRunning ? g.Turn?.Word : null,
+            WordsLeft: g.WordsLeft,
+            AllTurnsDone: g.AllTurnsDone);
     }
+
+    private static TeamDto TeamOf(GameState g, Team t) => new(
+        t.Number,
+        t.MemberIds.Select(id => new TeamMemberDto(id, g.FindPlayer(id)?.Pseudo ?? "?")).ToList(),
+        t.Found,
+        t.TurnsDone,
+        t.MemberIds.Count);
+
+    private TurnDto? TurnOf(GameState g) => g.Turn is not { } turn
+        ? null
+        : new TurnDto(
+            turn.Team.Number,
+            turn.GiverId,
+            g.FindPlayer(turn.GiverId)?.Pseudo ?? "?",
+            turn.GuesserIds.Select(id => g.FindPlayer(id)?.Pseudo ?? "?").ToList(),
+            turn.Found,
+            turn.Passed,
+            turn.WordSeq,
+            SynonymsSeconds);
 
     private PlayerStateDto BuildPlayerState(string? playerId)
     {
         var g = _game;
         var player = g?.FindPlayer(playerId);
         if (g is null || player is null)
-            return new PlayerStateDto(false, g?.Code, null, null, nameof(Phase.Lobby), null, null, null, null, false, null);
+            return new PlayerStateDto(false, g?.Code, null, null, nameof(Phase.Lobby), null, null, null, null, false, null,
+                null, null, null, null);
 
         int? myAnswer = g.Answers.TryGetValue(player.Id, out var a) ? a : null;
         return new PlayerStateDto(
@@ -236,11 +313,23 @@ public sealed class GameService(
             CorrectAnswer: g.Phase == Phase.Reveal ? g.CurrentQuestion?.Answer : null,
             Timer: TimerOf(),
             ScoresVisible: g.ScoresVisible,
-            Ranking: g.ScoresVisible ? g.Ranking() : null);
+            Ranking: g.ScoresVisible ? g.Ranking() : null,
+            MyTeam: g.TeamOf(player.Id) is { } team ? TeamOf(g, team) : null,
+            Turn: TurnOf(g),
+            Role: RoleOf(g, player.Id),
+            Word: g.Phase == Phase.SynonymsRunning && g.Turn?.GiverId == player.Id ? g.Turn.Word : null);
+    }
+
+    private static string? RoleOf(GameState g, string playerId)
+    {
+        if (g.Turn is null || g.Phase is not (Phase.SynonymsReady or Phase.SynonymsRunning or Phase.SynonymsTurnEnd))
+            return null;
+        if (g.Turn.GiverId == playerId) return "giver";
+        return g.Turn.Team.MemberIds.Contains(playerId) ? "guesser" : "spectator";
     }
 
     private QuestionDto? QuestionOf(GameState g) =>
-        g.CurrentQuestion is { } q && g.Phase != Phase.Finished
+        g.CurrentQuestion is { } q && g.Phase is Phase.Question or Phase.Locked or Phase.Reveal
             ? new QuestionDto(g.QuestionIndex, g.Questions.Count, q.Text, q.Choices, TimerSeconds)
             : null;
 
@@ -264,7 +353,7 @@ public sealed class GameService(
         {
             if (token != _timerToken || _game is null) return;
             _timerEndsAt = null;
-            _game.Lock();
+            _game.OnTimerExpired();
         }
         await Broadcast();
     }

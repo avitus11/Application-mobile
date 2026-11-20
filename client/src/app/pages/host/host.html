@@ -25,9 +25,14 @@
       <span class="code">Code <strong>{{ s!.code }}</strong></span>
       @if (question(); as q) {
         <span class="progress">Question {{ q.index + 1 }} / {{ q.count }}</span>
+      } @else if (isSynonymsStage()) {
+        <span class="progress">Épreuve 2 · Synonymes</span>
       }
     </header>
 
+    @if (isSynonymsStage()) {
+      <app-synonyms-host [state]="s!" />
+    } @else {
     @switch (phase()) {
       <!-- Salon : on attend les joueurs -->
       @case ('Lobby') {
@@ -63,7 +68,7 @@
       @case ('Finished') {
         <section class="center">
           <h1 class="qp-logo">Fin du QCM !</h1>
-          <p class="muted">Révèle les scores pour découvrir le classement.</p>
+          <p class="muted">Révèle les scores, puis forme les duos pour l'épreuve des Synonymes.</p>
         </section>
       }
 
@@ -107,6 +112,7 @@
         }
       }
     }
+    }
 
     <!-- Classement, visible seulement quand l'animateur le décide -->
     @if (s!.scoresVisible && s!.ranking; as ranking) {
@@ -137,6 +143,23 @@
             <button class="qp-btn green" (click)="next()">
               {{ s!.hasNextQuestion ? 'Question suivante' : 'Terminer le QCM' }}
             </button>
+          }
+          @case ('Finished') {
+            <button class="qp-btn green" (click)="hub.call('FormTeams')" [disabled]="players().length < 2">Former les duos</button>
+          }
+          @case ('Duos') {
+            <button class="qp-btn green" (click)="hub.call('StartSynonyms')">Passer aux Synonymes</button>
+          }
+          @case ('SynonymsReady') {
+            <button class="qp-btn pink" (click)="hub.call('StartTurn')">C’est parti ! ({{ s!.turn?.seconds }} s)</button>
+            <button class="qp-btn ghost" (click)="hub.call('BackToTeams')">Changer d’équipe</button>
+          }
+          @case ('SynonymsRunning') {
+            <button class="qp-btn green wide" (click)="hub.call('WordFound', s!.turn?.wordSeq)">Trouvé ✓</button>
+            <button class="qp-btn ghost" (click)="hub.call('WordPassed', s!.turn?.wordSeq)">Passer</button>
+          }
+          @case ('SynonymsTurnEnd') {
+            <button class="qp-btn green" (click)="hub.call('BackToTeams')">Retour aux équipes</button>
           }
         }
       </div>

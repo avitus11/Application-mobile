@@ -41,6 +41,9 @@
       }
     </header>
 
+    @if (isSynonymsStage()) {
+      <app-synonyms-play [state]="s!" />
+    } @else {
     @switch (phase()) {
       @case ('Lobby') {
         <section class="message">
@@ -54,7 +57,7 @@
         <section class="message">
           <div class="emoji">🏁</div>
           <h2>Fin du QCM !</h2>
-          <p>Le classement va être révélé…</p>
+          <p>Prochaine étape : les duos…</p>
         </section>
       }
 
@@ -104,6 +107,8 @@
           </section>
         }
       }
+    }
+
     }
 
     @if (s!.scoresVisible && s!.ranking; as ranking) {

@@ -12,6 +12,16 @@ public enum Phase
     Reveal,
     /// <summary>Plus de questions : fin du QCM.</summary>
     Finished,
+    /// <summary>Les duos viennent d'être formés et sont affichés.</summary>
+    Duos,
+    /// <summary>Synonymes : liste des équipes, l'animateur choisit qui joue.</summary>
+    SynonymsIdle,
+    /// <summary>Synonymes : un tour est choisi, les joueurs se mettent en place.</summary>
+    SynonymsReady,
+    /// <summary>Synonymes : chrono lancé, le mot s'affiche chez celui qui fait deviner.</summary>
+    SynonymsRunning,
+    /// <summary>Synonymes : fin du tour, bilan des mots trouvés.</summary>
+    SynonymsTurnEnd,
 }
 
 public sealed class Player(string id, string pseudo)
@@ -29,7 +39,7 @@ public sealed class GameException(string message) : Exception(message);
 /// <summary>
 /// État d'une partie, sans réseau ni horloge : toute la logique de jeu testable est ici.
 /// </summary>
-public sealed class GameState
+public sealed partial class GameState
 {
     public const int MaxPseudoLength = 16;
     public const int PointsPerCorrectAnswer = 1;
@@ -37,10 +47,13 @@ public sealed class GameState
     private readonly List<Player> _players = [];
     private readonly Dictionary<string, int> _answers = [];
 
-    public GameState(string code, IReadOnlyList<QcmQuestion> questions)
+    public GameState(string code, IReadOnlyList<QcmQuestion> questions, IReadOnlyList<string>? words = null, Random? random = null)
     {
         Code = code;
         Questions = questions;
+        _random = random ?? Random.Shared;
+        // Les mots sont mélangés une fois : chacun ne sort qu'une seule fois dans la partie.
+        _words = new Queue<string>((words ?? []).OrderBy(_ => _random.Next()));
     }
 
     public string Code { get; }
@@ -78,6 +91,7 @@ public sealed class GameState
     {
         _players.RemoveAll(p => p.Id == id);
         _answers.Remove(id);
+        foreach (var team in _teams) team.MemberIds.Remove(id);
     }
 
     /// <summary>Affiche la question suivante et ouvre les réponses.</summary>
@@ -85,6 +99,8 @@ public sealed class GameState
     {
         if (Phase is Phase.Question or Phase.Locked)
             throw new GameException("Révèle d'abord la réponse de la question en cours.");
+        if (Phase is not (Phase.Lobby or Phase.Reveal))
+            throw new GameException("Le QCM est terminé.");
         if (!HasNextQuestion)
         {
             Phase = Phase.Finished;

@@ -1,4 +1,38 @@
-export type Phase = 'Lobby' | 'Question' | 'Locked' | 'Reveal' | 'Finished';
+export type Phase =
+  | 'Lobby'
+  | 'Question'
+  | 'Locked'
+  | 'Reveal'
+  | 'Finished'
+  | 'Duos'
+  | 'SynonymsIdle'
+  | 'SynonymsReady'
+  | 'SynonymsRunning'
+  | 'SynonymsTurnEnd';
+
+export interface TeamMember {
+  id: string;
+  pseudo: string;
+}
+
+export interface TeamDto {
+  number: number;
+  members: TeamMember[];
+  found: number;
+  turnsDone: number;
+  turnsTotal: number;
+}
+
+export interface TurnDto {
+  teamNumber: number;
+  giverId: string;
+  giverPseudo: string;
+  guessers: string[];
+  found: number;
+  passed: number;
+  wordSeq: number;
+  seconds: number;
+}
 
 export interface TimerDto {
   durationMs: number;
@@ -43,6 +77,11 @@ export interface HostState {
   hasNextQuestion: boolean;
   scoresVisible: boolean;
   ranking: RankingEntry[] | null;
+  teams: TeamDto[];
+  turn: TurnDto | null;
+  word: string | null;
+  wordsLeft: number;
+  allTurnsDone: boolean;
 }
 
 export interface PlayerState {
@@ -57,6 +96,10 @@ export interface PlayerState {
   timer: TimerDto | null;
   scoresVisible: boolean;
   ranking: RankingEntry[] | null;
+  myTeam: TeamDto | null;
+  turn: TurnDto | null;
+  role: 'giver' | 'guesser' | 'spectator' | null;
+  word: string | null;
 }
 
 export interface JoinResult {

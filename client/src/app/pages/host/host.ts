@@ -4,10 +4,11 @@ import { QuizHubService } from '../../core/quiz-hub.service';
 import { LETTERS } from '../../core/models';
 import { Countdown } from '../../shared/countdown';
 import { Leaderboard } from '../../shared/leaderboard';
+import { SynonymsHost } from './synonyms-host';
 
 @Component({
   selector: 'app-host',
-  imports: [Countdown, Leaderboard],
+  imports: [Countdown, Leaderboard, SynonymsHost],
   templateUrl: './host.html',
   styleUrl: './host.scss',
 })
@@ -22,6 +23,10 @@ export class Host implements OnInit {
   protected readonly connectedCount = computed(() => this.players().filter((p) => p.connected).length);
   protected readonly qrDataUrl = signal<string | null>(null);
   protected readonly confirmNewGame = signal(false);
+  protected readonly isSynonymsStage = computed(() => {
+    const p = this.phase();
+    return p === 'Duos' || p.startsWith('Synonyms');
+  });
 
   constructor() {
     effect(() => {

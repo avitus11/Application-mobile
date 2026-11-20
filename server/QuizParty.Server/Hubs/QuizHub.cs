@@ -24,6 +24,13 @@ public sealed class QuizHub(GameService game, IConfiguration config) : Hub
     public Task RevealAnswer() => Host(game.Reveal);
     public Task SetScoresVisible(bool visible) => Host(() => game.SetScoresVisible(visible));
     public Task RemovePlayer(string playerId) => Host(() => game.RemovePlayer(playerId));
+    public Task FormTeams() => Host(game.FormTeams);
+    public Task StartSynonyms() => Host(game.StartSynonyms);
+    public Task SelectTurn(int teamNumber) => Host(() => game.SelectTurn(teamNumber));
+    public Task BackToTeams() => Host(game.BackToTeams);
+    public Task StartTurn() => Host(game.StartTurn);
+    public Task WordFound(int wordSeq) => Host(() => game.WordFound(wordSeq));
+    public Task WordPassed(int wordSeq) => Host(() => game.WordPassed(wordSeq));
 
     // ---------- Joueurs ----------
 
@@ -34,6 +41,9 @@ public sealed class QuizHub(GameService game, IConfiguration config) : Hub
     public PlayerStateDto GetPlayerState() => game.GetPlayerState(Context.ConnectionId);
 
     public Task Answer(int choice) => Wrap(() => game.Answer(Context.ConnectionId, choice));
+
+    /// <summary>Trouvé / Passer depuis le téléphone de celui qui fait deviner.</summary>
+    public Task GiverWord(int wordSeq, bool found) => Wrap(() => game.PlayerWord(Context.ConnectionId, wordSeq, found));
 
     public override Task OnDisconnectedAsync(Exception? exception) => game.Disconnected(Context.ConnectionId);
 
